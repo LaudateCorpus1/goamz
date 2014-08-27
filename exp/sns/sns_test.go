@@ -1,11 +1,13 @@
 package sns_test
 
 import (
+	"strings"
+	"testing"
+
 	"github.com/goamz/goamz/aws"
 	"github.com/goamz/goamz/exp/sns"
 	"github.com/goamz/goamz/testutil"
 	"github.com/motain/gocheck"
-	"testing"
 )
 
 func Test(t *testing.T) {
@@ -115,9 +117,10 @@ func (s *S) TestGetTopicAttributes(c *gocheck.C) {
 }
 
 func (s *S) TestPublish(c *gocheck.C) {
-	testServer.Response(200, nil, TestPublishXmlOK)
 
-	pubOpt := &sns.PublishOpt{"foobar", "", "subject", "arn:aws:sns:us-east-1:123456789012:My-Topic"}
+	//Test TopicArn
+	testServer.Response(200, nil, TestPublishXmlOK)
+	pubOpt := &sns.PublishOpt{"foobar", "", "subject", "arn:aws:sns:us-east-1:123456789012:My-Topic", ""}
 	resp, err := s.sns.Publish(pubOpt)
 	req := testServer.WaitRequest()
 
@@ -128,6 +131,36 @@ func (s *S) TestPublish(c *gocheck.C) {
 	c.Assert(resp.MessageId, gocheck.Equals, "94f20ce6-13c5-43a0-9a9e-ca52d816e90b")
 	c.Assert(resp.ResponseMetadata.RequestId, gocheck.Equals, "f187a3c1-376f-11df-8963-01868b7c937a")
 	c.Assert(err, gocheck.IsNil)
+
+	//Test TargetArn
+	testServer.Response(200, nil, TestPublishXmlOK)
+	pubOpt = &sns.PublishOpt{"foobar", "", "subject", "", "arn:aws:sns:us-east-1:123456789012:My-TargetArn"}
+	resp, err = s.sns.Publish(pubOpt)
+	req = testServer.WaitRequest()
+
+	c.Assert(req.Method, gocheck.Equals, "GET")
+	c.Assert(req.URL.Path, gocheck.Equals, "/")
+	c.Assert(strings.Contains(req.URL.RawQuery, "My-TargetArn"), gocheck.Equals, true)
+	c.Assert(req.Header["Date"], gocheck.Not(gocheck.Equals), "")
+
+	c.Assert(resp.MessageId, gocheck.Equals, "94f20ce6-13c5-43a0-9a9e-ca52d816e90b")
+	c.Assert(resp.ResponseMetadata.RequestId, gocheck.Equals, "f187a3c1-376f-11df-8963-01868b7c937a")
+	c.Assert(err, gocheck.IsNil)
+}
+
+func (s *S) TestPublishErrorResponse(c *gocheck.C) {
+
+	testServer.Response(400, nil, TestPublishXmlError)
+
+	pubOpt := &sns.PublishOpt{"foobar", "", "subject", "", "arn:aws:sns:us-east-1:123456789012:My-TargetArn"}
+	_, err := s.sns.Publish(pubOpt)
+	_ = testServer.WaitRequest()
+
+	c.Assert(err, gocheck.NotNil)
+	sampleError := &sns.Error{}
+	c.Assert(err, gocheck.FitsTypeOf, sampleError)
+	casted := err.(*sns.Error)
+	c.Assert(casted.Code, gocheck.Equals, "EndpointDisabled")
 }
 
 func (s *S) TestSetTopicAttributes(c *gocheck.C) {

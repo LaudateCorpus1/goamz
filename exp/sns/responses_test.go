@@ -315,3 +315,12 @@ var TestSetPlatformApplicationAttributesXmlOK = `
   </ResponseMetadata>
 </SetPlatformApplicationAttributesResponse>
 `
+var TestPublishXmlError = `
+<ErrorResponse xmlns="http://sns.amazonaws.com/doc/2010-03-31/">
+  <Error>
+    <Type>Sender</Type>
+    <Code>EndpointDisabled</Code>
+    <Message>Endpoint is disabled</Message>
+  </Error>
+  <RequestId>9f4bff50-4f91-5923-84cc-b3284022d0d6</RequestId>
+</ErrorResponse>`

@@ -65,6 +65,7 @@ func (err *Error) Error() string {
 type xmlErrors struct {
 	RequestId string
 	Errors    []Error `xml:"Errors>Error"`
+	Error     Error   `xml:"Error"`
 }
 
 func (sns *SNS) query(params map[string]string, resp interface{}) error {
@@ -90,12 +91,15 @@ func (sns *SNS) query(params map[string]string, resp interface{}) error {
 }
 
 func buildError(r *http.Response) error {
+
 	errors := xmlErrors{}
 	xml.NewDecoder(r.Body).Decode(&errors)
-	var err Error
+
+	err := errors.Error
 	if len(errors.Errors) > 0 {
 		err = errors.Errors[0]
 	}
+
 	err.RequestId = errors.RequestId
 	err.StatusCode = r.StatusCode
 	if err.Message == "" {
