@@ -120,6 +120,24 @@ func (q *Query) AddCreateRequestTable(description TableDescriptionT) {
 		})
 	}
 
+	globalSecondaryIndexes := []interface{}{}
+
+	for _, ind := range description.GlobalSecondaryIndexes {
+		globalSecondaryIndexes = append(globalSecondaryIndexes, msi{
+			"IndexName":  ind.IndexName,
+			"KeySchema":  ind.KeySchema,
+			"Projection": ind.Projection,
+			"ProvisionedThroughput": msi{
+				"ReadCapacityUnits":  int(ind.ProvisionedThroughput.ReadCapacityUnits),
+				"WriteCapacityUnits": int(ind.ProvisionedThroughput.WriteCapacityUnits),
+			},
+		})
+	}
+
+	if len(globalSecondaryIndexes) > 0 {
+		b["GlobalSecondaryIndexes"] = globalSecondaryIndexes
+	}
+
 	if len(localSecondaryIndexes) > 0 {
 		b["LocalSecondaryIndexes"] = localSecondaryIndexes
 	}

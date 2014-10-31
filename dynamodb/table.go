@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	simplejson "github.com/bitly/go-simplejson"
 )
 
@@ -35,6 +36,15 @@ type LocalSecondaryIndexT struct {
 	Projection     ProjectionT
 }
 
+type GlobalSecondaryIndexT struct {
+	IndexName             string
+	IndexSizeBytes        int64
+	ItemCount             int64
+	KeySchema             []KeySchemaT
+	Projection            ProjectionT
+	ProvisionedThroughput ProvisionedThroughputT
+}
+
 type ProvisionedThroughputT struct {
 	NumberOfDecreasesToday int64
 	ReadCapacityUnits      int64
@@ -42,15 +52,16 @@ type ProvisionedThroughputT struct {
 }
 
 type TableDescriptionT struct {
-	AttributeDefinitions  []AttributeDefinitionT
-	CreationDateTime      float64
-	ItemCount             int64
-	KeySchema             []KeySchemaT
-	LocalSecondaryIndexes []LocalSecondaryIndexT
-	ProvisionedThroughput ProvisionedThroughputT
-	TableName             string
-	TableSizeBytes        int64
-	TableStatus           string
+	AttributeDefinitions   []AttributeDefinitionT
+	CreationDateTime       float64
+	ItemCount              int64
+	KeySchema              []KeySchemaT
+	LocalSecondaryIndexes  []LocalSecondaryIndexT
+	GlobalSecondaryIndexes []GlobalSecondaryIndexT
+	ProvisionedThroughput  ProvisionedThroughputT
+	TableName              string
+	TableSizeBytes         int64
+	TableStatus            string
 }
 
 type describeTableResponse struct {
