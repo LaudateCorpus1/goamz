@@ -13,6 +13,7 @@ The following packages are available at the moment:
 ```
 github.com/goamz/goamz/autoscaling
 github.com/goamz/goamz/aws
+github.com/goamz/goamz/cloudformation
 github.com/goamz/goamz/cloudfront
 github.com/goamz/goamz/cloudwatch
 github.com/goamz/goamz/dynamodb
@@ -23,6 +24,7 @@ github.com/goamz/goamz/rds
 github.com/goamz/goamz/route53
 github.com/goamz/goamz/s3
 github.com/goamz/goamz/sqs
+github.com/goamz/goamz/sts
 
 github.com/goamz/goamz/exp/mturk
 github.com/goamz/goamz/exp/sdb
