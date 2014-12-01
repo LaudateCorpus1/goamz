@@ -318,6 +318,30 @@ func (q *Queue) ReceiveMessageWithParameters(p map[string]string) (resp *Receive
 	return
 }
 
+// ReceiveMessageWithWaitTimeSeconds adds Amazon SQS Long Polling Support.
+// It does so through use of the `WaitTimeSeconds` Query Parameter and by setting the http.Client Timeout field of the requesting Client.
+func (q *Queue) ReceiveMessageWithWaitTimeSeconds(MaxNumberOfMessages, VisibilityTimeoutSec, WaitTimeSec int) (*ReceiveMessageResponse, error) {
+
+	// http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-long-polling.html
+	// Documentation says WaitTimeSeconds must be a positive integer between 1 and 20 to be used. If 0, short polling is used instead.
+	if WaitTimeSec > 20 {
+		WaitTimeSec = 20
+	} else if WaitTimeSec < 0 {
+		WaitTimeSec = 1
+	}
+
+	params := map[string]string{
+		"MaxNumberOfMessages": strconv.Itoa(MaxNumberOfMessages),
+		"VisibilityTimeout":   strconv.Itoa(VisibilityTimeoutSec),
+		"WaitTimeSeconds":     strconv.Itoa(WaitTimeSec),
+	}
+
+	// set the timeout on the http Client to be the same as the timeout we provide Amazon
+	q.SQS.Client.Timeout = time.Duration(WaitTimeSec) * time.Second
+
+	return q.ReceiveMessageWithParameters(params)
+}
+
 func (q *Queue) ChangeMessageVisibility(M *Message, VisibilityTimeout int) (resp *ChangeMessageVisibilityResponse, err error) {
 	resp = &ChangeMessageVisibilityResponse{}
 	params := makeParams("ChangeMessageVisibility")
