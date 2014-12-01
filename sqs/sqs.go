@@ -34,6 +34,7 @@ type SQS struct {
 	aws.Auth
 	aws.Region
 	private byte // Reserve the right of using private data.
+	Client  http.Client
 }
 
 // NewFrom Create A new SQS Client given an access and secret Key
@@ -70,7 +71,7 @@ func NewFrom(accessKey, secretKey, region string) (*SQS, error) {
 
 // NewFrom Create A new SQS Client from an exisisting aws.Auth
 func New(auth aws.Auth, region aws.Region) *SQS {
-	return &SQS{auth, region, 0}
+	return &SQS{auth, region, 0, http.Client{}}
 }
 
 // Queue Reference to a Queue
@@ -472,7 +473,7 @@ func (s *SQS) query(queueUrl string, params map[string]string, resp interface{})
 		log.Printf("GET ", url_.String())
 	}
 
-	r, err := http.Get(url_.String())
+	r, err := s.Client.Get(url_.String())
 	if err != nil {
 		return err
 	}
