@@ -13,7 +13,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/goamz/goamz/aws"
 	"io"
 	"io/ioutil"
 	"log"
@@ -23,6 +22,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/goamz/goamz/aws"
 )
 
 const API_VERSION = "2012-11-05"
@@ -335,9 +336,6 @@ func (q *Queue) ReceiveMessageWithWaitTimeSeconds(MaxNumberOfMessages, Visibilit
 		"VisibilityTimeout":   strconv.Itoa(VisibilityTimeoutSec),
 		"WaitTimeSeconds":     strconv.Itoa(WaitTimeSec),
 	}
-
-	// set the timeout on the http Client to be the same as the timeout we provide Amazon
-	q.SQS.Client.Timeout = time.Duration(WaitTimeSec) * time.Second
 
 	return q.ReceiveMessageWithParameters(params)
 }
