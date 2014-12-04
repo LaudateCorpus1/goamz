@@ -249,8 +249,37 @@ func (t *Table) ConditionalUpdateAttributes(key *Key, attributes, expected []Att
 	return t.modifyAttributes(key, attributes, expected, "PUT")
 }
 
+func (t *Table) ConditionalUpdateAttributesExpression(key *PrimaryKey, UpdateExpression string, ConditionalExpression string, ExpressionAttributeNames map[string]string, ExpressionAttributeValues []Attribute) (bool, error) {
+	return t.modifyAttributesWithExpressions(key, UpdateExpression, ConditionalExpression, ExpressionAttributeNames, ExpressionAttributeValues, "PUT")
+}
+
 func (t *Table) ConditionalDeleteAttributes(key *Key, attributes, expected []Attribute) (bool, error) {
 	return t.modifyAttributes(key, attributes, expected, "DELETE")
+}
+
+func (t *Table) modifyAttributesWithExpressions(key *PrimaryKey, UpdateExpression string, ConditionalExpression string, ExpressionAttributeNames map[string]string, ExpressionAttributeValues []Attribute, action string) (bool, error) {
+
+	if UpdateExpression == "" {
+		return false, errors.New("Update Expression Required")
+	}
+
+	q := NewQuery(t)
+	q.AddUpdateKey(key)
+	q.AddUpdateExpression(UpdateExpression)
+
+	if ConditionalExpression != "" {
+		q.AddConditionExpression(ConditionalExpression)
+	}
+
+	if ExpressionAttributeNames != nil {
+		q.AddExpressionAttributeNames(ExpressionAttributeNames)
+	}
+
+	if ExpressionAttributeValues != nil {
+		q.AddExpressionAttributeValues(ExpressionAttributeValues)
+	}
+
+	return t.executeUpdate(q)
 }
 
 func (t *Table) modifyAttributes(key *Key, attributes, expected []Attribute, action string) (bool, error) {
@@ -266,6 +295,11 @@ func (t *Table) modifyAttributes(key *Key, attributes, expected []Attribute, act
 	if expected != nil {
 		q.AddExpected(expected)
 	}
+
+	return t.executeUpdate(q)
+}
+
+func (t *Table) executeUpdate(q *Query) (bool, error) {
 
 	jsonResponse, err := t.Server.queryServer(target("UpdateItem"), q)
 

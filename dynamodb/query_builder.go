@@ -34,6 +34,18 @@ func (q *Query) AddKey(t *Table, key *Key) {
 	q.buffer["Key"] = keymap
 }
 
+func (q *Query) AddUpdateKey(k *PrimaryKey) {
+	keymap := msi{
+		k.KeyAttribute.Name: msi{
+			k.KeyAttribute.Type: k.KeyAttribute.Value},
+	}
+	if k.HasRange() {
+		keymap[k.RangeAttribute.Name] = msi{k.RangeAttribute.Type: k.RangeAttribute.Value}
+	}
+
+	q.buffer["Key"] = keymap
+}
+
 func keyAttributes(t *Table, key *Key) msi {
 	k := t.Key
 
@@ -232,6 +244,24 @@ func (q *Query) AddExpected(attributes []Attribute) {
 		expected[a.Name] = value
 	}
 	q.buffer["Expected"] = expected
+}
+
+func (q *Query) AddUpdateExpression(expression string) {
+	q.buffer["UpdateExpression"] = expression
+}
+
+func (q *Query) AddConditionExpression(expression string) {
+	q.buffer["ConditionExpression"] = expression
+}
+
+//map[#NAME] => name
+func (q *Query) AddExpressionAttributeNames(attributeNames map[string]string) {
+	q.buffer["ExpressionAttributeNames"] = attributeNames
+}
+
+//map[:NAME] => value
+func (q *Query) AddExpressionAttributeValues(attributes []Attribute) {
+	q.buffer["ExpressionAttributeValues"] = attributeList(attributes)
 }
 
 func attributeList(attributes []Attribute) msi {
