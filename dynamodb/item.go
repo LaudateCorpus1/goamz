@@ -271,11 +271,11 @@ func (t *Table) modifyAttributesWithExpressions(key *PrimaryKey, UpdateExpressio
 		q.AddConditionExpression(ConditionalExpression)
 	}
 
-	if ExpressionAttributeNames != nil {
+	if ExpressionAttributeNames != nil && len(ExpressionAttributeNames) != 0 {
 		q.AddExpressionAttributeNames(ExpressionAttributeNames)
 	}
 
-	if ExpressionAttributeValues != nil {
+	if ExpressionAttributeValues != nil && len(ExpressionAttributeNames) != 0 {
 		q.AddExpressionAttributeValues(ExpressionAttributeValues)
 	}
 
