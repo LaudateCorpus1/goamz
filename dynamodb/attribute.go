@@ -8,6 +8,7 @@ const (
 	TYPE_STRING = "S"
 	TYPE_NUMBER = "N"
 	TYPE_BINARY = "B"
+	TYPE_BOOL   = "BOOL"
 
 	TYPE_STRING_SET = "SS"
 	TYPE_NUMBER_SET = "NS"
@@ -113,6 +114,14 @@ func NewBinaryAttribute(name string, value string) *Attribute {
 		Type:  TYPE_BINARY,
 		Name:  name,
 		Value: value,
+	}
+}
+
+func NewBooleanAttribute(name string, value bool) *Attribute {
+	return &Attribute{
+		Type:  TYPE_BOOL,
+		Name:  name,
+		Value: strconv.FormatBool(value),
 	}
 }
 
