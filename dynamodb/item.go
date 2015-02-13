@@ -187,7 +187,6 @@ func (t *Table) PutItemConditionalUpdate(hashKey, rangeKey string, attributes []
 		q.AddConditionExpression(conditionalExpression)
 	}
 
-	fmt.Println(q)
 	jsonResponse, err := t.Server.queryServer(target("PutItem"), q)
 
 	if err != nil {
