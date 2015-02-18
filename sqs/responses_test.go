@@ -30,11 +30,20 @@ var TestDeleteQueueXmlOK = `
 </DeleteQueueResponse>
 `
 
+var TestPurgeQueueXmlOK = `
+<PurgeQueueResponse>
+  <ResponseMetadata>
+    <RequestId>6fde8d1e-52cd-4581-8cd9-c512f4c64223</RequestId>
+  </ResponseMetadata>
+</PurgeQueueResponse>
+`
+
 var TestSendMessageXmlOK = `
 <SendMessageResponse>
   <SendMessageResult>
     <MD5OfMessageBody>fafb00f5732ab283681e124bf8747ed1</MD5OfMessageBody>
     <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>
+    <MD5OfMessageAttributes>ba056227cfd9533dba1f72ad9816d233</MD5OfMessageAttributes>
   </SendMessageResult>
   <ResponseMetadata>
     <RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId>

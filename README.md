@@ -17,6 +17,7 @@ github.com/goamz/goamz/cloudformation
 github.com/goamz/goamz/cloudfront
 github.com/goamz/goamz/cloudwatch
 github.com/goamz/goamz/dynamodb
+github.com/goamz/goamz/ecs
 github.com/goamz/goamz/ec2
 github.com/goamz/goamz/elb
 github.com/goamz/goamz/iam
@@ -50,7 +51,7 @@ Just use `go get` with any of the available packages. For example:
 
 To run tests, first install gocheck with:
 
-`$ go get github.com/motain/gocheck`
+`$ go get gopkg.in/check.v1`
 
 Then run go test as usual:
 

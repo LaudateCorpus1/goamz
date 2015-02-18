@@ -62,6 +62,8 @@ func NewFrom(accessKey, secretKey, region string) (*SQS, error) {
 		aws_region = aws.APNortheast
 	case "sa.east", "sa.east.1":
 		aws_region = aws.SAEast
+	case "cn.north", "cn.north.1":
+		aws_region = aws.CNNorth
 	default:
 		return nil, errors.New(fmt.Sprintf("Unknow/Unsupported region %s", region))
 	}
@@ -104,10 +106,15 @@ type DeleteQueueResponse struct {
 	ResponseMetadata ResponseMetadata
 }
 
-type SendMessageResponse struct {
-	MD5              string `xml:"SendMessageResult>MD5OfMessageBody"`
-	Id               string `xml:"SendMessageResult>MessageId"`
+type PurgeQueueResponse struct {
 	ResponseMetadata ResponseMetadata
+}
+
+type SendMessageResponse struct {
+	MD5                    string `xml:"SendMessageResult>MD5OfMessageBody"`
+	MD5OfMessageAttributes string `xml:"SendMessageResult>MD5OfMessageAttributes"`
+	Id                     string `xml:"SendMessageResult>MessageId"`
+	ResponseMetadata       ResponseMetadata
 }
 
 type ReceiveMessageResponse struct {
@@ -267,6 +274,14 @@ func (q *Queue) Delete() (resp *DeleteQueueResponse, err error) {
 	return
 }
 
+func (q *Queue) Purge() (resp *PurgeQueueResponse, err error) {
+	resp = &PurgeQueueResponse{}
+	params := makeParams("PurgeQueue")
+
+	err = q.SQS.query(q.Url, params, resp)
+	return
+}
+
 func (q *Queue) SendMessageWithDelay(MessageBody string, DelaySeconds int64) (resp *SendMessageResponse, err error) {
 	resp = &SendMessageResponse{}
 	params := makeParams("SendMessage")
@@ -283,6 +298,27 @@ func (q *Queue) SendMessage(MessageBody string) (resp *SendMessageResponse, err 
 	params := makeParams("SendMessage")
 
 	params["MessageBody"] = MessageBody
+
+	err = q.SQS.query(q.Url, params, resp)
+	return
+}
+
+func (q *Queue) SendMessageWithAttributes(MessageBody string, attrs map[string]string) (resp *SendMessageResponse, err error) {
+	resp = &SendMessageResponse{}
+	params := makeParams("SendMessage")
+
+	params["MessageBody"] = MessageBody
+
+	i := 1
+	for k, v := range attrs {
+		nameParam := fmt.Sprintf("MessageAttribute.%d.Name", i)
+		valParam := fmt.Sprintf("MessageAttribute.%d.Value.StringValue", i)
+		typeParam := fmt.Sprintf("MessageAttribute.%d.Value.DataType", i)
+		params[nameParam] = k
+		params[valParam] = v
+		params[typeParam] = "String"
+		i++
+	}
 
 	err = q.SQS.query(q.Url, params, resp)
 	return
@@ -487,15 +523,32 @@ func (s *SQS) query(queueUrl string, params map[string]string, resp interface{})
 	if s.Auth.Token() != "" {
 		params["SecurityToken"] = s.Auth.Token()
 	}
-	sign(s.Auth, "GET", path, params, url_.Host)
 
-	url_.RawQuery = multimap(params).Encode()
+	var r *http.Response
+	if s.Region.Name == "cn-north-1" {
+		var sarray []string
+		for k, v := range params {
+			sarray = append(sarray, aws.Encode(k)+"="+aws.Encode(v))
+		}
+
+		req, err := http.NewRequest("GET", fmt.Sprintf("%s?%s", url_, strings.Join(sarray, "&")), nil)
+		if err != nil {
+			return err
+		}
+		signer := aws.NewV4Signer(s.Auth, "sqs", s.Region)
+		signer.Sign(req)
+		client := http.Client{}
+		r, err = client.Do(req)
+	} else {
+		sign(s.Auth, "GET", path, params, url_.Host)
+		url_.RawQuery = multimap(params).Encode()
+		r, err = http.Get(url_.String())
+	}
 
 	if debug {
 		log.Printf("GET ", url_.String())
 	}
 
-	r, err := s.Client.Get(url_.String())
 	if err != nil {
 		return err
 	}

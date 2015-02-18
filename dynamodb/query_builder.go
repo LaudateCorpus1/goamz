@@ -2,6 +2,7 @@ package dynamodb
 
 import (
 	"encoding/json"
+	"sort"
 )
 
 type msi map[string]interface{}
@@ -91,7 +92,18 @@ func (q *Query) AddWriteRequestItems(tableItems map[*Table]map[string][][]Attrib
 		for table, itemActions := range tableItems {
 			out[table.Name] = func() interface{} {
 				out2 := []interface{}{}
-				for action, items := range itemActions {
+
+				// here breaks an order of array....
+				// For now, we iterate over sorted key by action for stable testing
+				keys := []string{}
+				for k := range itemActions {
+					keys = append(keys, k)
+				}
+				sort.Strings(keys)
+
+				for ki := range keys {
+					action := keys[ki]
+					items := itemActions[action]
 					for _, attributes := range items {
 						Item_or_Key := map[bool]string{true: "Item", false: "Key"}[action == "Put"]
 						out2 = append(out2, msi{action + "Request": msi{Item_or_Key: attributeList(attributes)}})
@@ -133,25 +145,32 @@ func (q *Query) AddCreateRequestTable(description TableDescriptionT) {
 	}
 
 	globalSecondaryIndexes := []interface{}{}
-
+	intmax := func(x, y int64) int64 {
+		if x > y {
+			return x
+		}
+		return y
+	}
 	for _, ind := range description.GlobalSecondaryIndexes {
-		globalSecondaryIndexes = append(globalSecondaryIndexes, msi{
+		rec := msi{
 			"IndexName":  ind.IndexName,
 			"KeySchema":  ind.KeySchema,
 			"Projection": ind.Projection,
-			"ProvisionedThroughput": msi{
-				"ReadCapacityUnits":  int(ind.ProvisionedThroughput.ReadCapacityUnits),
-				"WriteCapacityUnits": int(ind.ProvisionedThroughput.WriteCapacityUnits),
-			},
-		})
-	}
-
-	if len(globalSecondaryIndexes) > 0 {
-		b["GlobalSecondaryIndexes"] = globalSecondaryIndexes
+		}
+		// need at least one unit, and since go's max() is float based.
+		rec["ProvisionedThroughput"] = msi{
+			"ReadCapacityUnits":  intmax(1, ind.ProvisionedThroughput.ReadCapacityUnits),
+			"WriteCapacityUnits": intmax(1, ind.ProvisionedThroughput.WriteCapacityUnits),
+		}
+		globalSecondaryIndexes = append(globalSecondaryIndexes, rec)
 	}
 
 	if len(localSecondaryIndexes) > 0 {
 		b["LocalSecondaryIndexes"] = localSecondaryIndexes
+	}
+
+	if len(globalSecondaryIndexes) > 0 {
+		b["GlobalSecondaryIndexes"] = globalSecondaryIndexes
 	}
 }
 

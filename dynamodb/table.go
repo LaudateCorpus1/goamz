@@ -28,6 +28,15 @@ type ProjectionT struct {
 	ProjectionType string
 }
 
+type GlobalSecondaryIndexT struct {
+	IndexName             string
+	IndexSizeBytes        int64
+	ItemCount             int64
+	KeySchema             []KeySchemaT
+	Projection            ProjectionT
+	ProvisionedThroughput ProvisionedThroughputT
+}
+
 type LocalSecondaryIndexT struct {
 	IndexName      string
 	IndexSizeBytes int64
@@ -56,8 +65,8 @@ type TableDescriptionT struct {
 	CreationDateTime       float64
 	ItemCount              int64
 	KeySchema              []KeySchemaT
-	LocalSecondaryIndexes  []LocalSecondaryIndexT
 	GlobalSecondaryIndexes []GlobalSecondaryIndexT
+	LocalSecondaryIndexes  []LocalSecondaryIndexT
 	ProvisionedThroughput  ProvisionedThroughputT
 	TableName              string
 	TableSizeBytes         int64
