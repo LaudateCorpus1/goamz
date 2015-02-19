@@ -155,13 +155,13 @@ type DescribeTagsResp struct {
 }
 
 type TagDescription struct {
-	Tags             []Tag  `xml:"Tags->member"`
+	Tags             []Tag  `xml:"Tags>member"`
 	LoadBalancerName string `xml:"LoadBalancerName"`
 }
 
 type Tag struct {
-	Key   string
-	Value string
+	Key   string `xml:"Key"`
+	Value string `xml:"Value"`
 }
 
 // Describe Load Balancers.
@@ -316,6 +316,7 @@ func (elb *ELB) query(params map[string]string, resp interface{}) error {
 	if r.StatusCode != 200 {
 		return buildError(r)
 	}
+
 	return xml.NewDecoder(r.Body).Decode(resp)
 }
 
