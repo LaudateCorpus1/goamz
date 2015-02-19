@@ -4,11 +4,12 @@ package elb
 import (
 	"encoding/xml"
 	"fmt"
-	"github.com/goamz/goamz/aws"
 	"net/http"
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/goamz/goamz/aws"
 )
 
 type ELB struct {
@@ -149,6 +150,20 @@ type LoadBalancerDescription struct {
 	VPCId                     string                      `xml:"VPCId"`
 }
 
+type DescribeTagsResp struct {
+	TagDescriptions []TagDescription `xml:"DescribeTagsResult>TagDescriptions>member"`
+}
+
+type TagDescription struct {
+	Tags             []Tag  `xml:"Tags->member"`
+	LoadBalancerName string `xml:"LoadBalancerName"`
+}
+
+type Tag struct {
+	Key   string
+	Value string
+}
+
 // Describe Load Balancers.
 // It can be used to describe all Load Balancers or specific ones.
 //
@@ -160,6 +175,19 @@ func (elb *ELB) DescribeLoadBalancers(names ...string) (*DescribeLoadBalancerRes
 		params[index] = name
 	}
 	resp := new(DescribeLoadBalancerResp)
+	if err := elb.query(params, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (elb *ELB) DescribeTags(names ...string) (*DescribeTagsResp, error) {
+	params := map[string]string{"Action": "DescribeTags"}
+	for i, name := range names {
+		index := fmt.Sprintf("LoadBalancerNames.member.%d", i+1)
+		params[index] = name
+	}
+	resp := new(DescribeTagsResp)
 	if err := elb.query(params, resp); err != nil {
 		return nil, err
 	}
