@@ -193,6 +193,13 @@ func (q *Query) AddSelect(value string) {
 func (q *Query) AddIndex(value string) {
 	q.buffer["IndexName"] = value
 }
+func (q *Query) AddSortDirection(value bool) {
+	if value {
+		q.buffer["ScanIndexForward"] = "true"
+	} else {
+		q.buffer["ScanIndexForward"] = "false"
+	}
+}
 
 /*
    "ScanFilter":{

@@ -3,6 +3,7 @@ package dynamodb
 import (
 	"errors"
 	"fmt"
+
 	simplejson "github.com/bitly/go-simplejson"
 )
 
@@ -31,6 +32,15 @@ func (t *Table) LimitedQueryOnIndex(attributeComparisons []AttributeComparison, 
 	q.AddKeyConditions(attributeComparisons)
 	q.AddIndex(indexName)
 	q.AddLimit(limit)
+	return runQuery(q, t)
+}
+
+func (t *Table) LimitedQueryOnIndexWithOrder(attributeComparisons []AttributeComparison, indexName string, limit int64, ascending bool) ([]map[string]*Attribute, error) {
+	q := NewQuery(t)
+	q.AddKeyConditions(attributeComparisons)
+	q.AddIndex(indexName)
+	q.AddLimit(limit)
+	q.AddSortDirection(ascending)
 	return runQuery(q, t)
 }
 
