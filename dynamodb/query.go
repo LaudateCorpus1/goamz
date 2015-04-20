@@ -20,6 +20,14 @@ func (t *Table) QueryOnIndex(attributeComparisons []AttributeComparison, indexNa
 	return runQuery(q, t)
 }
 
+func (t *Table) QueryOnIndexWithOrder(attributeComparisons []AttributeComparison, indexName string, ascending bool) ([]map[string]*Attribute, error) {
+	q := NewQuery(t)
+	q.AddKeyConditions(attributeComparisons)
+	q.AddIndex(indexName)
+	q.AddSortDirection(ascending)
+	return runQuery(q, t)
+}
+
 func (t *Table) LimitedQuery(attributeComparisons []AttributeComparison, limit int64) ([]map[string]*Attribute, error) {
 	q := NewQuery(t)
 	q.AddKeyConditions(attributeComparisons)
