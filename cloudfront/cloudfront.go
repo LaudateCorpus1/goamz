@@ -78,8 +78,25 @@ func (cf *CloudFront) generateSignature(policy []byte) (string, error) {
 	}
 
 	encoded := base64Replacer.Replace(base64.StdEncoding.EncodeToString(signed))
-
 	return encoded, nil
+}
+
+func (cf *CloudFront) Cookie(path string, expires time.Time) (b64Policy, b64SignedPolicy, keyPairId string, err error) {
+
+	//create policy
+	policy, err := buildPolicy(strings.TrimSuffix(cf.BaseURL, "/")+"/"+path, expires)
+	if err != nil {
+		return
+	}
+
+	b64SignedPolicy, err = cf.generateSignature(policy)
+	if err != nil {
+		return
+	}
+
+	keyPairId = cf.keyPairId
+	b64Policy = base64Replacer.Replace(base64.StdEncoding.EncodeToString(policy))
+	return
 }
 
 // Creates a signed url using RSAwithSHA1 as specified by
