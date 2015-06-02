@@ -47,18 +47,21 @@ type policy struct {
 	Statement []statement
 }
 
-func buildPolicy(resource string, expireTime time.Time) ([]byte, error) {
+func buildPolicy(resources []string, expireTime time.Time) ([]byte, error) {
 	p := &policy{
-		Statement: []statement{
+		Statement: []statement{},
+	}
+
+	for _, path := range resources {
+		p.Statement = append(p.Statement,
 			statement{
-				Resource: resource,
+				Resource: path,
 				Condition: condition{
 					DateLessThan: epochTime{
 						EpochTime: expireTime.Truncate(time.Millisecond).Unix(),
 					},
 				},
-			},
-		},
+			})
 	}
 
 	return json.Marshal(p)
@@ -81,10 +84,15 @@ func (cf *CloudFront) generateSignature(policy []byte) (string, error) {
 	return encoded, nil
 }
 
-func (cf *CloudFront) Cookie(path string, expires time.Time) (b64Policy, b64SignedPolicy, keyPairId string, err error) {
+func (cf *CloudFront) Cookie(paths []string, expires time.Time) (b64Policy, b64SignedPolicy, keyPairId string, err error) {
+
+	filePaths := []string{}
+	for _, p := range paths {
+		filePaths = append(filePaths, strings.TrimSuffix(cf.BaseURL, "/")+"/"+p)
+	}
 
 	//create policy
-	policy, err := buildPolicy(strings.TrimSuffix(cf.BaseURL, "/")+"/"+path, expires)
+	policy, err := buildPolicy(filePaths, expires)
 	if err != nil {
 		return
 	}
@@ -107,7 +115,7 @@ func (cf *CloudFront) CannedSignedURL(path, queryString string, expires time.Tim
 		resource = path + "?" + queryString
 	}
 
-	policy, err := buildPolicy(resource, expires)
+	policy, err := buildPolicy([]string{resource}, expires)
 	if err != nil {
 		return "", err
 	}
