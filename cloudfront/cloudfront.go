@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -101,7 +100,7 @@ func (cf *CloudFront) Cookie(resource string, expires time.Time) (b64Policy, b64
 // Creates a signed url using RSAwithSHA1 as specified by
 // http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-creating-signed-url-canned-policy.html#private-content-canned-policy-creating-signature
 func (cf *CloudFront) CannedSignedURL(path, queryString string, expires time.Time) (string, error) {
-	resource := cf.BaseURL + path
+	resource := strings.TrimSuffix(cf.BaseURL, "/") + "/" + strings.TrimPrefix(path, "/")
 	if queryString != "" {
 		resource = path + "?" + queryString
 	}
@@ -128,24 +127,7 @@ func (cf *CloudFront) CannedSignedURL(path, queryString string, expires time.Tim
 	}
 
 	expireTime := expires.Truncate(time.Millisecond).Unix()
-
 	uri.Path = path
 	uri.RawQuery += fmt.Sprintf("Expires=%d&Signature=%s&Key-Pair-Id=%s", expireTime, signature, cf.keyPairId)
-
 	return uri.String(), nil
-}
-
-func (cloudfront *CloudFront) SignedURL(path, querystrings string, expires time.Time) string {
-	policy := `{"Statement":[{"Resource":"` + path + "?" + querystrings + `,"Condition":{"DateLessThan":{"AWS:EpochTime":` + strconv.FormatInt(expires.Truncate(time.Millisecond).Unix(), 10) + `}}}]}`
-
-	hash := sha1.New()
-	hash.Write([]byte(policy))
-	b := hash.Sum(nil)
-	he := base64.StdEncoding.EncodeToString(b)
-
-	policySha1 := he
-
-	url := cloudfront.BaseURL + path + "?" + querystrings + "&Expires=" + strconv.FormatInt(expires.Unix(), 10) + "&Signature=" + policySha1 + "&Key-Pair-Id=" + cloudfront.keyPairId
-
-	return url
 }
